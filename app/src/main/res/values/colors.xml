@@ -2,4 +2,38 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Primary Colors -->
+    <color name="primary_color">#6200EE</color>
+    <color name="primary_variant">#3700B3</color>
+    <color name="secondary_color">#03DAC6</color>
+    <color name="secondary_variant">#018786</color>
+    
+    <!-- Background Colors -->
+    <color name="background_color">#F5F5F5</color>
+    <color name="surface_color">#FFFFFF</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    
+    <!-- Status Colors -->
+    <color name="error_color">#B00020</color>
+    <color name="success_color">#4CAF50</color>
+    <color name="warning_color">#FF9800</color>
+    
+    <!-- Priority Colors -->
+    <color name="priority_normal">#757575</color>
+    <color name="priority_important">#FF9800</color>
+    <color name="priority_urgent">#F44336</color>
+    
+    <!-- Category Colors -->
+    <color name="category_default">#6200EE</color>
+    <color name="category_work">#FF5722</color>
+    <color name="category_personal">#4CAF50</color>
+    <color name="category_study">#2196F3</color>
+    <color name="category_health">#FF9800</color>
+    <color name="category_shopping">#9C27B0</color>
+    <color name="category_travel">#00BCD4</color>
+    <color name="category_other">#795548</color>
 </resources>

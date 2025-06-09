@@ -9,7 +9,7 @@ data class User(
         val DEFAULT_USERS = listOf(
             User("admin", "123456"),
             User("user", "password"),
-            User("test", "test123")
+            User("zilong", "zilong")
         )
     }
 } 
