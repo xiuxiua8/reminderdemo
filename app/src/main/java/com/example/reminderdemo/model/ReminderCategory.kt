@@ -15,8 +15,8 @@ enum class ReminderCategory(val displayName: String, val color: String) {
             return values().find { it.displayName == category } ?: DEFAULT
         }
         
-        fun getAllCategories(): List<String> {
-            return values().map { it.displayName }
+        fun getAllCategories(): List<ReminderCategory> {
+            return values().toList()
         }
     }
 } 

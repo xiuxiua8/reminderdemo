@@ -12,6 +12,8 @@
     <!-- Background Colors -->
     <color name="background_color">#F5F5F5</color>
     <color name="surface_color">#FFFFFF</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="outline_variant">#E0E0E0</color>
     
     <!-- Text Colors -->
     <color name="text_primary">#212121</color>

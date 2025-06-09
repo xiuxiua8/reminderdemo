@@ -2,11 +2,15 @@ package com.example.reminderdemo.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.reminderdemo.R
 import com.example.reminderdemo.databinding.ActivityReminderDetailBinding
@@ -16,6 +20,8 @@ import com.example.reminderdemo.model.ReminderCategory
 import com.example.reminderdemo.ui.viewmodel.ReminderViewModel
 import com.example.reminderdemo.utils.DateUtils
 import com.example.reminderdemo.utils.ValidationUtils
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
 
 class ReminderDetailActivity : AppCompatActivity() {
@@ -34,6 +40,10 @@ class ReminderDetailActivity : AppCompatActivity() {
     private var currentReminder: Reminder? = null
     private var mode = MODE_ADD
     private var reminderId: Long = -1
+    
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<View>
+    private var selectedCategory: ReminderCategory = ReminderCategory.DEFAULT
+    private var selectedPriority: Priority = Priority.NORMAL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +53,8 @@ class ReminderDetailActivity : AppCompatActivity() {
         
         setupToolbar()
         getIntentData()
-        setupDropdowns()
+        setupChips()
+        setupBottomSheet()
         setupUI()
         observeViewModel()
         
@@ -51,6 +62,21 @@ class ReminderDetailActivity : AppCompatActivity() {
             loadReminderData()
         } else {
             setupForNewReminder()
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_detail_toolbar, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_save -> {
+                saveReminder()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
@@ -78,18 +104,91 @@ class ReminderDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupDropdowns() {
-        // Setup category dropdown
-        val categories = ReminderCategory.getAllCategories()
-        val categoryAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, categories)
-        binding.actvCategory.setAdapter(categoryAdapter)
-        binding.actvCategory.setText(ReminderCategory.DEFAULT.displayName, false)
+    private fun setupChips() {
+        setupCategoryChips()
+        setupPriorityChips()
+    }
 
-        // Setup priority dropdown
-        val priorities = Priority.getAllPriorities().map { it.displayName }
-        val priorityAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, priorities)
-        binding.actvPriority.setAdapter(priorityAdapter)
-        binding.actvPriority.setText(Priority.NORMAL.displayName, false)
+    private fun setupCategoryChips() {
+        val categories = ReminderCategory.getAllCategories()
+        
+        categories.forEach { category ->
+            val chip = Chip(this)
+            chip.text = category.displayName
+            chip.isCheckable = true
+            // Use predefined color for now
+            val color = when(category) {
+                ReminderCategory.DEFAULT -> R.color.primary_color
+                ReminderCategory.WORK -> R.color.category_work
+                ReminderCategory.PERSONAL -> R.color.category_personal
+                ReminderCategory.STUDY -> R.color.category_study
+                ReminderCategory.HEALTH -> R.color.category_health
+                ReminderCategory.SHOPPING -> R.color.category_shopping
+                ReminderCategory.TRAVEL -> R.color.category_travel
+                ReminderCategory.OTHER -> R.color.category_other
+            }
+            chip.chipBackgroundColor = ContextCompat.getColorStateList(this, color)
+            chip.setTextColor(ContextCompat.getColor(this, R.color.white))
+            
+            chip.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    selectedCategory = category
+                }
+            }
+            
+            binding.chipGroupCategory.addView(chip)
+            
+            // Set default selection
+            if (category == ReminderCategory.DEFAULT) {
+                chip.isChecked = true
+            }
+        }
+    }
+
+    private fun setupPriorityChips() {
+        val priorities = Priority.getAllPriorities()
+        
+        priorities.forEach { priority ->
+            val chip = Chip(this)
+            chip.text = priority.displayName
+            chip.isCheckable = true
+            chip.chipStrokeWidth = 2f
+            // Use predefined color for now
+            val color = when(priority) {
+                Priority.NORMAL -> R.color.priority_normal
+                Priority.IMPORTANT -> R.color.priority_important
+                Priority.URGENT -> R.color.priority_urgent
+            }
+            chip.chipStrokeColor = ContextCompat.getColorStateList(this, color)
+            chip.setTextColor(ContextCompat.getColor(this, color))
+            
+            chip.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    selectedPriority = priority
+                }
+            }
+            
+            binding.chipGroupPriority.addView(chip)
+            
+            // Set default selection
+            if (priority == Priority.NORMAL) {
+                chip.isChecked = true
+            }
+        }
+    }
+
+    private fun setupBottomSheet() {
+        bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheetMetadata)
+        bottomSheetBehavior.isHideable = true
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        
+        binding.fabInfo.setOnClickListener {
+            if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN) {
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+            } else {
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+            }
+        }
     }
 
     private fun setupUI() {
@@ -98,24 +197,35 @@ class ReminderDetailActivity : AppCompatActivity() {
         
         binding.etTitle.isEnabled = isEditable
         binding.etContent.isEnabled = isEditable
-        binding.actvCategory.isEnabled = isEditable
-        binding.actvPriority.isEnabled = isEditable
+        binding.chipGroupCategory.isEnabled = isEditable
+        binding.chipGroupPriority.isEnabled = isEditable
         
-        if (mode == MODE_VIEW) {
-            binding.btnSave.visibility = View.GONE
-            binding.btnCancel.text = "返回"
+        // Set up chip groups for edit mode
+        for (i in 0 until binding.chipGroupCategory.childCount) {
+            binding.chipGroupCategory.getChildAt(i).isEnabled = isEditable
         }
-
-        binding.btnSave.setOnClickListener {
-            saveReminder()
-        }
-
-        binding.btnCancel.setOnClickListener {
-            finish()
+        for (i in 0 until binding.chipGroupPriority.childCount) {
+            binding.chipGroupPriority.getChildAt(i).isEnabled = isEditable
         }
         
-        // Show/hide metadata card based on mode
-        binding.cardMetadata.visibility = if (mode == MODE_ADD) View.GONE else View.VISIBLE
+        // Hide info FAB for new reminders
+        if (mode == MODE_ADD) {
+            binding.fabInfo.visibility = View.GONE
+        }
+        
+        // Set up character counter
+        setupCharacterCounter()
+    }
+
+    private fun setupCharacterCounter() {
+        binding.etContent.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val count = s?.length ?: 0
+                binding.tvCharCount.text = "$count 字符"
+            }
+        })
     }
 
     private fun observeViewModel() {
@@ -164,20 +274,39 @@ class ReminderDetailActivity : AppCompatActivity() {
     }
 
     private fun setupForNewReminder() {
-        binding.cardMetadata.visibility = View.GONE
+        binding.fabInfo.visibility = View.GONE
     }
 
     private fun populateFields(reminder: Reminder) {
         binding.etTitle.setText(reminder.title)
         binding.etContent.setText(reminder.content)
-        binding.actvCategory.setText(reminder.category, false)
         
-        val priority = Priority.fromValue(reminder.priority)
-        binding.actvPriority.setText(priority.displayName, false)
+        // Set category chip
+        val categoryToSelect = ReminderCategory.getAllCategories().find { it.displayName == reminder.category }
+            ?: ReminderCategory.DEFAULT
+        selectedCategory = categoryToSelect
+        
+        for (i in 0 until binding.chipGroupCategory.childCount) {
+            val chip = binding.chipGroupCategory.getChildAt(i) as Chip
+            chip.isChecked = chip.text == categoryToSelect.displayName
+        }
+        
+        // Set priority chip
+        val priorityToSelect = Priority.fromValue(reminder.priority)
+        selectedPriority = priorityToSelect
+        
+        for (i in 0 until binding.chipGroupPriority.childCount) {
+            val chip = binding.chipGroupPriority.getChildAt(i) as Chip
+            chip.isChecked = chip.text == priorityToSelect.displayName
+        }
         
         // Update metadata
         binding.tvCreatedAt.text = DateUtils.formatFullDate(reminder.createdAt)
         binding.tvUpdatedAt.text = DateUtils.formatFullDate(reminder.updatedAt)
+        binding.tvCharCount.text = "${reminder.content.length} 字符"
+        
+        // Show info FAB
+        binding.fabInfo.visibility = View.VISIBLE
     }
 
     private fun saveReminder() {
@@ -187,9 +316,8 @@ class ReminderDetailActivity : AppCompatActivity() {
 
         val title = binding.etTitle.text.toString().trim()
         val content = binding.etContent.text.toString().trim()
-        val category = binding.actvCategory.text.toString()
-        val priorityName = binding.actvPriority.text.toString()
-        val priority = Priority.getAllPriorities().find { it.displayName == priorityName }?.value ?: 0
+        val category = selectedCategory.displayName
+        val priority = selectedPriority.value
 
         when (mode) {
             MODE_ADD -> {
@@ -231,6 +359,12 @@ class ReminderDetailActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        // Close bottom sheet if open
+        if (bottomSheetBehavior.state != BottomSheetBehavior.STATE_HIDDEN) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+            return
+        }
+        
         // Check if there are unsaved changes
         if (hasUnsavedChanges()) {
             androidx.appcompat.app.AlertDialog.Builder(this)
@@ -251,9 +385,8 @@ class ReminderDetailActivity : AppCompatActivity() {
         
         val currentTitle = binding.etTitle.text.toString().trim()
         val currentContent = binding.etContent.text.toString().trim()
-        val currentCategory = binding.actvCategory.text.toString()
-        val currentPriorityName = binding.actvPriority.text.toString()
-        val currentPriority = Priority.getAllPriorities().find { it.displayName == currentPriorityName }?.value ?: 0
+        val currentCategory = selectedCategory.displayName
+        val currentPriority = selectedPriority.value
 
         return when (mode) {
             MODE_ADD -> {
