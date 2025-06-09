@@ -9,11 +9,13 @@ import com.example.reminderdemo.data.ReminderDatabase
 import com.example.reminderdemo.data.ReminderRepository
 import com.example.reminderdemo.model.Reminder
 import com.example.reminderdemo.utils.DateUtils
+import com.example.reminderdemo.utils.PreferencesManager
 import kotlinx.coroutines.launch
 
 class ReminderViewModel(application: Application) : AndroidViewModel(application) {
     
     private val repository: ReminderRepository
+    private val preferencesManager: PreferencesManager
     
     // LiveData for UI observation
     val allReminders: LiveData<List<Reminder>>
@@ -32,8 +34,20 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
     init {
         val reminderDao = ReminderDatabase.getDatabase(application).reminderDao()
         repository = ReminderRepository(reminderDao)
-        allReminders = repository.getAllReminders()
-        categories = repository.getAllCategories()
+        preferencesManager = PreferencesManager(application)
+        
+        // 获取当前用户的数据
+        val currentUserId = getCurrentUserId()
+        allReminders = repository.getAllReminders(currentUserId)
+        categories = repository.getAllCategories(currentUserId)
+    }
+    
+    private fun getCurrentUserId(): Long {
+        val userId = preferencesManager.currentUserId
+        if (userId <= 0) {
+            throw IllegalStateException("用户未登录或会话无效")
+        }
+        return userId
     }
     
     fun insertReminder(title: String, content: String, category: String, priority: Int) {
@@ -41,7 +55,10 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
             try {
                 _isLoading.value = true
                 val currentTime = DateUtils.getCurrentDate()
+                val currentUserId = getCurrentUserId()
+                
                 val reminder = Reminder(
+                    userId = currentUserId,
                     title = title,
                     content = content,
                     createdAt = currentTime,
@@ -63,7 +80,9 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                val existingReminder = repository.getReminderById(id)
+                val currentUserId = getCurrentUserId()
+                val existingReminder = repository.getReminderById(id, currentUserId)
+                
                 if (existingReminder != null) {
                     val updatedReminder = existingReminder.copy(
                         title = title,
@@ -103,7 +122,8 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                repository.deleteReminderById(id)
+                val currentUserId = getCurrentUserId()
+                repository.deleteReminderById(id, currentUserId)
                 _operationSuccess.value = "备忘录删除成功"
             } catch (e: Exception) {
                 _errorMessage.value = "删除备忘录失败: ${e.message}"
@@ -114,15 +134,18 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
     }
     
     fun searchReminders(query: String): LiveData<List<Reminder>> {
-        return repository.searchReminders(query)
+        val currentUserId = getCurrentUserId()
+        return repository.searchReminders(currentUserId, query)
     }
     
     fun getRemindersByCategory(category: String): LiveData<List<Reminder>> {
-        return repository.getRemindersByCategory(category)
+        val currentUserId = getCurrentUserId()
+        return repository.getRemindersByCategory(currentUserId, category)
     }
     
     suspend fun getReminderById(id: Long): Reminder? {
-        return repository.getReminderById(id)
+        val currentUserId = getCurrentUserId()
+        return repository.getReminderById(id, currentUserId)
     }
     
     fun clearErrorMessage() {

@@ -12,6 +12,8 @@ class PreferencesManager(context: Context) {
         private const val PREF_NAME = "reminder_prefs"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_USERNAME = "username"
+        private const val KEY_CURRENT_USER_ID = "current_user_id"
+        private const val KEY_CURRENT_USER_DISPLAY_NAME = "current_user_display_name"
         private const val KEY_REMEMBER_LOGIN = "remember_login"
         private const val KEY_LAST_LOGIN_TIME = "last_login_time"
         
@@ -29,6 +31,14 @@ class PreferencesManager(context: Context) {
     var username: String?
         get() = sharedPreferences.getString(KEY_USERNAME, null)
         set(value) = sharedPreferences.edit().putString(KEY_USERNAME, value).apply()
+    
+    var currentUserId: Long
+        get() = sharedPreferences.getLong(KEY_CURRENT_USER_ID, -1L)
+        set(value) = sharedPreferences.edit().putLong(KEY_CURRENT_USER_ID, value).apply()
+    
+    var currentUserDisplayName: String?
+        get() = sharedPreferences.getString(KEY_CURRENT_USER_DISPLAY_NAME, null)
+        set(value) = sharedPreferences.edit().putString(KEY_CURRENT_USER_DISPLAY_NAME, value).apply()
     
     var rememberLogin: Boolean
         get() = sharedPreferences.getBoolean(KEY_REMEMBER_LOGIN, false)
@@ -51,20 +61,39 @@ class PreferencesManager(context: Context) {
         get() = sharedPreferences.getString(KEY_THEME_MODE, "system") ?: "system"
         set(value) = sharedPreferences.edit().putString(KEY_THEME_MODE, value).apply()
     
-    fun login(username: String, rememberLogin: Boolean) {
-        this.isLoggedIn = true
-        this.username = username
+    /**
+     * 登录成功后保存用户信息
+     */
+    fun saveUserSession(user: com.example.reminderdemo.model.User, rememberLogin: Boolean = false) {
+        isLoggedIn = true
+        username = user.username
+        currentUserId = user.id
+        currentUserDisplayName = user.displayName
         this.rememberLogin = rememberLogin
-        this.lastLoginTime = System.currentTimeMillis()
+        lastLoginTime = System.currentTimeMillis()
     }
     
-    fun logout() {
+    /**
+     * 退出登录，清除用户会话
+     */
+    fun clearUserSession() {
+        isLoggedIn = false
+        username = null
+        currentUserId = -1L
+        currentUserDisplayName = null
+        lastLoginTime = 0
+        // 根据设置决定是否保留记住登录状态
         if (!rememberLogin) {
+            // 如果不记住登录，则清除所有信息
             sharedPreferences.edit().clear().apply()
-        } else {
-            isLoggedIn = false
-            lastLoginTime = 0
         }
+    }
+    
+    /**
+     * 检查是否有有效的用户会话
+     */
+    fun hasValidUserSession(): Boolean {
+        return isLoggedIn && currentUserId > 0 && !username.isNullOrBlank()
     }
     
     fun clearAll() {

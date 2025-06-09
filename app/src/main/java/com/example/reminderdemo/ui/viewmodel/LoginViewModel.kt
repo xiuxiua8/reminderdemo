@@ -4,96 +4,116 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.example.reminderdemo.data.ReminderDatabase
+import com.example.reminderdemo.data.UserRepository
 import com.example.reminderdemo.model.User
 import com.example.reminderdemo.utils.PreferencesManager
 import com.example.reminderdemo.utils.ValidationUtils
+import kotlinx.coroutines.launch
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
     
-    private val preferencesManager = PreferencesManager(application)
+    private val userRepository: UserRepository
+    private val preferencesManager: PreferencesManager
     
-    // UI state
+    // UI状态
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
     
-    private val _loginResult = MutableLiveData<LoginResult>()
-    val loginResult: LiveData<LoginResult> = _loginResult
+    private val _loginSuccess = MutableLiveData<Boolean>()
+    val loginSuccess: LiveData<Boolean> = _loginSuccess
     
-    private val _usernameError = MutableLiveData<String?>()
-    val usernameError: LiveData<String?> = _usernameError
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
     
-    private val _passwordError = MutableLiveData<String?>()
-    val passwordError: LiveData<String?> = _passwordError
+    private val _currentUser = MutableLiveData<User?>()
+    val currentUser: LiveData<User?> = _currentUser
     
-    // Check if user is already logged in
+    init {
+        val database = ReminderDatabase.getDatabase(application)
+        userRepository = UserRepository(database.userDao())
+        preferencesManager = PreferencesManager(application)
+        
+        // 检查是否已登录
+        if (preferencesManager.hasValidUserSession()) {
+            loadCurrentUser()
+        }
+    }
+    
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            try {
+                val userId = preferencesManager.currentUserId
+                if (userId > 0) {
+                    val user = userRepository.getUserById(userId)
+                    _currentUser.value = user
+                }
+            } catch (e: Exception) {
+                // 如果加载失败，清除会话
+                preferencesManager.clearUserSession()
+            }
+        }
+    }
+    
+    fun login(username: String, password: String, rememberLogin: Boolean) {
+        // 验证输入
+        val usernameError = ValidationUtils.getUsernameError(username)
+        if (usernameError != null) {
+            _errorMessage.value = usernameError
+            return
+        }
+        
+        val passwordError = ValidationUtils.getPasswordError(password)
+        if (passwordError != null) {
+            _errorMessage.value = passwordError
+            return
+        }
+        
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _errorMessage.value = null
+                
+                val user = userRepository.authenticateUser(username, password)
+                if (user != null) {
+                    preferencesManager.saveUserSession(user, rememberLogin)
+                    _currentUser.value = user
+                    _loginSuccess.value = true
+                } else {
+                    _errorMessage.value = "用户名或密码错误"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "登录失败: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    fun logout() {
+        preferencesManager.clearUserSession()
+        _currentUser.value = null
+        _loginSuccess.value = false
+    }
+    
     fun isLoggedIn(): Boolean {
-        return preferencesManager.isLoggedIn
+        return preferencesManager.hasValidUserSession()
+    }
+    
+    fun getCurrentUserId(): Long {
+        return preferencesManager.currentUserId
     }
     
     fun getCurrentUsername(): String? {
         return preferencesManager.username
     }
     
-    fun login(username: String, password: String, rememberLogin: Boolean) {
-        _isLoading.value = true
-        
-        // Clear previous errors
-        _usernameError.value = null
-        _passwordError.value = null
-        
-        // Validate input
-        val usernameError = ValidationUtils.getUsernameError(username)
-        val passwordError = ValidationUtils.getPasswordError(password)
-        
-        if (usernameError != null) {
-            _usernameError.value = usernameError
-            _isLoading.value = false
-            return
-        }
-        
-        if (passwordError != null) {
-            _passwordError.value = passwordError
-            _isLoading.value = false
-            return
-        }
-        
-        // Simulate network delay
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            // Check credentials against default users
-            val user = User.DEFAULT_USERS.find { 
-                it.username == username && it.password == password 
-            }
-            
-            if (user != null) {
-                // Login successful
-                preferencesManager.login(username, rememberLogin)
-                _loginResult.value = LoginResult.Success(username)
-            } else {
-                // Login failed
-                _loginResult.value = LoginResult.Error("用户名或密码错误")
-            }
-            
-            _isLoading.value = false
-        }, 1000) // 1 second delay to simulate network request
+    fun getCurrentUserDisplayName(): String? {
+        return preferencesManager.currentUserDisplayName
     }
     
-    fun logout() {
-        preferencesManager.logout()
-        _loginResult.value = LoginResult.LoggedOut
-    }
-    
-    fun clearLoginResult() {
-        _loginResult.value = null
-    }
-    
-    fun clearErrors() {
-        _usernameError.value = null
-        _passwordError.value = null
-    }
-    
-    sealed class LoginResult {
-        data class Success(val username: String) : LoginResult()
-        data class Error(val message: String) : LoginResult()
-        object LoggedOut : LoginResult()
+    fun clearErrorMessage() {
+        _errorMessage.value = null
     }
 } 

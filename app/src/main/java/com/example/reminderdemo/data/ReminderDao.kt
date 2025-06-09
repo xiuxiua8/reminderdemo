@@ -7,17 +7,20 @@ import com.example.reminderdemo.model.Reminder
 @Dao
 interface ReminderDao {
     
-    @Query("SELECT * FROM reminders ORDER BY updatedAt DESC")
-    fun getAllReminders(): LiveData<List<Reminder>>
+    @Query("SELECT * FROM reminders WHERE userId = :userId ORDER BY updatedAt DESC")
+    fun getAllReminders(userId: Long): LiveData<List<Reminder>>
     
-    @Query("SELECT * FROM reminders WHERE id = :id")
-    suspend fun getReminderById(id: Long): Reminder?
+    @Query("SELECT * FROM reminders WHERE id = :id AND userId = :userId")
+    suspend fun getReminderById(id: Long, userId: Long): Reminder?
     
-    @Query("SELECT * FROM reminders WHERE title LIKE :searchQuery OR content LIKE :searchQuery ORDER BY updatedAt DESC")
-    fun searchReminders(searchQuery: String): LiveData<List<Reminder>>
+    @Query("SELECT * FROM reminders WHERE userId = :userId AND (title LIKE :searchQuery OR content LIKE :searchQuery) ORDER BY updatedAt DESC")
+    fun searchReminders(userId: Long, searchQuery: String): LiveData<List<Reminder>>
     
-    @Query("SELECT * FROM reminders WHERE category = :category ORDER BY updatedAt DESC")
-    fun getRemindersByCategory(category: String): LiveData<List<Reminder>>
+    @Query("SELECT * FROM reminders WHERE userId = :userId AND category = :category ORDER BY updatedAt DESC")
+    fun getRemindersByCategory(userId: Long, category: String): LiveData<List<Reminder>>
+    
+    @Query("SELECT * FROM reminders WHERE userId = :userId AND priority = :priority ORDER BY updatedAt DESC")
+    fun getRemindersByPriority(userId: Long, priority: Int): LiveData<List<Reminder>>
     
     @Insert
     suspend fun insertReminder(reminder: Reminder): Long
@@ -28,9 +31,15 @@ interface ReminderDao {
     @Delete
     suspend fun deleteReminder(reminder: Reminder)
     
-    @Query("DELETE FROM reminders WHERE id = :id")
-    suspend fun deleteReminderById(id: Long)
+    @Query("DELETE FROM reminders WHERE id = :id AND userId = :userId")
+    suspend fun deleteReminderById(id: Long, userId: Long)
     
-    @Query("SELECT DISTINCT category FROM reminders ORDER BY category")
-    fun getAllCategories(): LiveData<List<String>>
+    @Query("SELECT DISTINCT category FROM reminders WHERE userId = :userId ORDER BY category")
+    fun getAllCategories(userId: Long): LiveData<List<String>>
+    
+    @Query("SELECT COUNT(*) FROM reminders WHERE userId = :userId")
+    suspend fun getReminderCount(userId: Long): Int
+    
+    @Query("DELETE FROM reminders WHERE userId = :userId")
+    suspend fun deleteAllRemindersForUser(userId: Long)
 } 

@@ -5,20 +5,24 @@ import com.example.reminderdemo.model.Reminder
 
 class ReminderRepository(private val reminderDao: ReminderDao) {
     
-    fun getAllReminders(): LiveData<List<Reminder>> {
-        return reminderDao.getAllReminders()
+    fun getAllReminders(userId: Long): LiveData<List<Reminder>> {
+        return reminderDao.getAllReminders(userId)
     }
     
-    suspend fun getReminderById(id: Long): Reminder? {
-        return reminderDao.getReminderById(id)
+    suspend fun getReminderById(id: Long, userId: Long): Reminder? {
+        return reminderDao.getReminderById(id, userId)
     }
     
-    fun searchReminders(query: String): LiveData<List<Reminder>> {
-        return reminderDao.searchReminders("%$query%")
+    fun searchReminders(userId: Long, query: String): LiveData<List<Reminder>> {
+        return reminderDao.searchReminders(userId, "%$query%")
     }
     
-    fun getRemindersByCategory(category: String): LiveData<List<Reminder>> {
-        return reminderDao.getRemindersByCategory(category)
+    fun getRemindersByCategory(userId: Long, category: String): LiveData<List<Reminder>> {
+        return reminderDao.getRemindersByCategory(userId, category)
+    }
+    
+    fun getRemindersByPriority(userId: Long, priority: Int): LiveData<List<Reminder>> {
+        return reminderDao.getRemindersByPriority(userId, priority)
     }
     
     suspend fun insertReminder(reminder: Reminder): Long {
@@ -33,11 +37,19 @@ class ReminderRepository(private val reminderDao: ReminderDao) {
         reminderDao.deleteReminder(reminder)
     }
     
-    suspend fun deleteReminderById(id: Long) {
-        reminderDao.deleteReminderById(id)
+    suspend fun deleteReminderById(id: Long, userId: Long) {
+        reminderDao.deleteReminderById(id, userId)
     }
     
-    fun getAllCategories(): LiveData<List<String>> {
-        return reminderDao.getAllCategories()
+    fun getAllCategories(userId: Long): LiveData<List<String>> {
+        return reminderDao.getAllCategories(userId)
+    }
+    
+    suspend fun getReminderCount(userId: Long): Int {
+        return reminderDao.getReminderCount(userId)
+    }
+    
+    suspend fun deleteAllRemindersForUser(userId: Long) {
+        reminderDao.deleteAllRemindersForUser(userId)
     }
 } 

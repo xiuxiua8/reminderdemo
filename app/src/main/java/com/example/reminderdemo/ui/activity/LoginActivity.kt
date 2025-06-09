@@ -2,14 +2,15 @@ package com.example.reminderdemo.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
+import android.widget.Toast
 
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import com.example.reminderdemo.data.DatabaseInitializer
+import com.example.reminderdemo.data.ReminderDatabase
 import com.example.reminderdemo.databinding.ActivityLoginBinding
 import com.example.reminderdemo.ui.viewmodel.LoginViewModel
 import com.example.reminderdemo.utils.AnimationUtils
-import com.example.reminderdemo.utils.ToastUtils
 import com.example.reminderdemo.utils.UIUtils
 import com.example.reminderdemo.utils.HapticUtils
 
@@ -20,6 +21,9 @@ class LoginActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // 初始化数据库
+        initializeDatabase()
         
         // Check if user is already logged in
         if (loginViewModel.isLoggedIn()) {
@@ -34,75 +38,59 @@ class LoginActivity : AppCompatActivity() {
         observeViewModel()
     }
     
+    private fun initializeDatabase() {
+        val database = ReminderDatabase.getDatabase(this)
+        DatabaseInitializer.initializeWithSampleData(database)
+    }
+    
     private fun setupUI() {
-        // 为登录按钮添加点击动画和触觉反馈
-        val originalClickListener = View.OnClickListener {
+        // 设置登录按钮点击事件
+        val originalClickListener = android.view.View.OnClickListener {
             val username = binding.etUsername.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
             val rememberLogin = binding.cbRememberLogin.isChecked
             
-            HapticUtils.mediumTap(binding.btnLogin)
+            // 清除之前的错误信息
+            loginViewModel.clearErrorMessage()
+            
+            // 尝试登录
             loginViewModel.login(username, password, rememberLogin)
         }
         
+        // 保存原始点击监听器到tag中
         binding.btnLogin.tag = originalClickListener
+        
+        // 为登录按钮添加点击动画
         UIUtils.setupClickAnimation(binding.btnLogin)
     }
-    
+
     private fun observeViewModel() {
         loginViewModel.isLoading.observe(this) { isLoading ->
+            UIUtils.setLoadingState(binding.btnLogin, isLoading)
             if (isLoading) {
-                showLoading()
+                binding.btnLogin.text = "登录中..."
             } else {
-                hideLoading()
+                binding.btnLogin.text = "登录"
             }
         }
-        
-        loginViewModel.loginResult.observe(this) { result ->
-            when (result) {
-                is LoginViewModel.LoginResult.Success -> {
-                    ToastUtils.showSuccess(this, "欢迎回来，${result.username}!")
+
+        loginViewModel.loginSuccess.observe(this) { success ->
+            success?.let {
+                if (it) {
+                    val username = loginViewModel.getCurrentUserDisplayName() ?: loginViewModel.getCurrentUsername()
                     HapticUtils.success(this)
-                    UIUtils.showSuccessState(binding.btnLogin, this)
+                    Toast.makeText(this, "欢迎回来，$username!", Toast.LENGTH_SHORT).show()
                     navigateToMain()
                 }
-                is LoginViewModel.LoginResult.Error -> {
-                    ToastUtils.showError(this, result.message)
-                    HapticUtils.error(this)
-                    UIUtils.showErrorState(binding.btnLogin, this)
-                }
-                is LoginViewModel.LoginResult.LoggedOut -> {
-                    // Handle logout if needed
-                }
-                null -> {
-                    // No result yet
-                }
             }
         }
-        
-        loginViewModel.usernameError.observe(this) { error ->
-            binding.tilUsername.error = error
-        }
-        
-        loginViewModel.passwordError.observe(this) { error ->
-            binding.tilPassword.error = error
-        }
-    }
-    
-        private fun showLoading() {
-        UIUtils.fadeIn(binding.progressBar)
-        UIUtils.setLoadingState(binding.btnLogin, true)
-        binding.etUsername.isEnabled = false
-        binding.etPassword.isEnabled = false
-        binding.cbRememberLogin.isEnabled = false
-    }
 
-    private fun hideLoading() {
-        UIUtils.fadeOut(binding.progressBar)
-        UIUtils.setLoadingState(binding.btnLogin, false)
-        binding.etUsername.isEnabled = true
-        binding.etPassword.isEnabled = true
-        binding.cbRememberLogin.isEnabled = true
+        loginViewModel.errorMessage.observe(this) { error ->
+            error?.let {
+                HapticUtils.error(this)
+                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
     
     private fun navigateToMain() {
@@ -115,7 +103,7 @@ class LoginActivity : AppCompatActivity() {
     
     override fun onDestroy() {
         super.onDestroy()
-        loginViewModel.clearLoginResult()
-        loginViewModel.clearErrors()
+        // 清理资源
+        loginViewModel.clearErrorMessage()
     }
 } 
