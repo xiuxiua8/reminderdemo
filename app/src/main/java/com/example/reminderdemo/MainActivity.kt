@@ -2,25 +2,31 @@ package com.example.reminderdemo
 
 import android.content.Intent
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.PopupMenu
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.reminderdemo.databinding.ActivityMainBinding
 import com.example.reminderdemo.ui.activity.LoginActivity
+import com.example.reminderdemo.ui.adapter.ReminderAdapter
 import com.example.reminderdemo.ui.viewmodel.LoginViewModel
+import com.example.reminderdemo.ui.viewmodel.ReminderViewModel
+import com.example.reminderdemo.model.Reminder
+import com.example.reminderdemo.data.DatabaseInitializer
+import com.example.reminderdemo.data.ReminderDatabase
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private val loginViewModel: LoginViewModel by viewModels()
+    private val reminderViewModel: ReminderViewModel by viewModels()
+    private lateinit var reminderAdapter: ReminderAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,23 +34,18 @@ class MainActivity : AppCompatActivity() {
         // Check if user is logged in
         if (!loginViewModel.isLoggedIn()) {
             navigateToLogin()
-            return
+                return
         }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
-
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        appBarConfiguration = AppBarConfiguration(navController.graph)
-        setupActionBarWithNavController(navController, appBarConfiguration)
-
-        binding.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null)
-                .setAnchorView(R.id.fab).show()
-        }
+        
+        setupUI()
+        setupRecyclerView()
+        observeViewModel()
+        initializeDatabase()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -67,10 +68,111 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        return navController.navigateUp(appBarConfiguration)
-                || super.onSupportNavigateUp()
+    private fun setupUI() {
+        binding.fab.setOnClickListener {
+            // TODO: Navigate to add reminder activity
+            Toast.makeText(this, "添加新备忘录功能即将推出", Toast.LENGTH_SHORT).show()
+        }
+        
+        // Search functionality
+        binding.etSearch.addTextChangedListener { editable ->
+            val query = editable.toString()
+            if (query.isBlank()) {
+                reminderViewModel.allReminders.observe(this) { reminders ->
+                    reminderAdapter.submitList(reminders)
+                    updateEmptyState(reminders.isEmpty())
+                }
+            } else {
+                reminderViewModel.searchReminders(query).observe(this) { reminders ->
+                    reminderAdapter.submitList(reminders)
+                    updateEmptyState(reminders.isEmpty())
+                }
+            }
+        }
+    }
+    
+    private fun setupRecyclerView() {
+        reminderAdapter = ReminderAdapter(
+            onItemClick = { reminder ->
+                // TODO: Navigate to edit reminder activity
+                Toast.makeText(this, "编辑: ${reminder.title}", Toast.LENGTH_SHORT).show()
+            },
+            onMoreClick = { reminder, view ->
+                showMoreOptionsMenu(reminder, view)
+            }
+        )
+        
+        binding.rvReminders.apply {
+            adapter = reminderAdapter
+            layoutManager = LinearLayoutManager(this@MainActivity)
+        }
+    }
+    
+    private fun observeViewModel() {
+        reminderViewModel.allReminders.observe(this) { reminders ->
+            reminderAdapter.submitList(reminders)
+            updateEmptyState(reminders.isEmpty())
+        }
+        
+        reminderViewModel.isLoading.observe(this) { isLoading ->
+            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+        
+        reminderViewModel.errorMessage.observe(this) { error ->
+            error?.let {
+                Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+                reminderViewModel.clearErrorMessage()
+            }
+        }
+        
+        reminderViewModel.operationSuccess.observe(this) { message ->
+            message?.let {
+                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                reminderViewModel.clearSuccessMessage()
+            }
+        }
+    }
+    
+    private fun initializeDatabase() {
+        val database = ReminderDatabase.getDatabase(this)
+        DatabaseInitializer.initializeWithSampleData(database)
+    }
+    
+    private fun updateEmptyState(isEmpty: Boolean) {
+        binding.layoutEmptyState.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.rvReminders.visibility = if (isEmpty) View.GONE else View.VISIBLE
+    }
+    
+    private fun showMoreOptionsMenu(reminder: Reminder, anchorView: View) {
+        PopupMenu(this, anchorView).apply {
+            menuInflater.inflate(R.menu.menu_reminder_item, menu)
+            setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.action_edit -> {
+                        // TODO: Navigate to edit reminder
+                        Toast.makeText(this@MainActivity, "编辑: ${reminder.title}", Toast.LENGTH_SHORT).show()
+                        true
+                    }
+                    R.id.action_delete -> {
+                        showDeleteConfirmDialog(reminder)
+                        true
+                    }
+                    else -> false
+                }
+            }
+            show()
+        }
+    }
+    
+    private fun showDeleteConfirmDialog(reminder: Reminder) {
+        AlertDialog.Builder(this)
+            .setTitle("删除备忘录")
+            .setMessage("确定要删除\"${reminder.title}\"吗？")
+            .setPositiveButton("删除") { _, _ ->
+                reminderViewModel.deleteReminder(reminder)
+            }
+            .setNegativeButton("取消", null)
+            .show()
     }
     
     private fun showLogoutDialog() {
