@@ -41,24 +41,16 @@ class ReminderAdapter(
                 tvContent.text = reminder.content.ifEmpty { "无内容" }
                 tvDate.text = DateUtils.formatRelativeTime(reminder.updatedAt)
                 
-                // Category
+                // Category - 使用新的彩虹渐变色
                 tvCategory.text = reminder.category
                 val category = ReminderCategory.fromString(reminder.category)
                 try {
-                    val colorRes = when (category) {
-                        ReminderCategory.WORK -> android.graphics.Color.parseColor(category.color)
-                        ReminderCategory.PERSONAL -> android.graphics.Color.parseColor(category.color)
-                        ReminderCategory.STUDY -> android.graphics.Color.parseColor(category.color)
-                        ReminderCategory.HEALTH -> android.graphics.Color.parseColor(category.color)
-                        ReminderCategory.SHOPPING -> android.graphics.Color.parseColor(category.color)
-                        ReminderCategory.TRAVEL -> android.graphics.Color.parseColor(category.color)
-                        ReminderCategory.OTHER -> android.graphics.Color.parseColor(category.color)
-                        else -> android.graphics.Color.parseColor(ReminderCategory.DEFAULT.color)
-                    }
+                    // 直接使用category的color属性，简化逻辑
+                    val colorRes = android.graphics.Color.parseColor(category.color)
                     tvCategory.setBackgroundColor(colorRes)
                 } catch (e: Exception) {
                     // Use default color if parsing fails
-                    tvCategory.setBackgroundColor(android.graphics.Color.parseColor("#6200EE"))
+                    tvCategory.setBackgroundColor(android.graphics.Color.parseColor(ReminderCategory.DEFAULT.color))
                 }
                 
                 // Priority

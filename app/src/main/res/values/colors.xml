@@ -29,13 +29,12 @@
     <color name="priority_important">#FF9800</color>
     <color name="priority_urgent">#F44336</color>
     
-    <!-- Category Colors -->
-    <color name="category_default">#6200EE</color>
-    <color name="category_work">#FF5722</color>
-    <color name="category_personal">#4CAF50</color>
-    <color name="category_study">#2196F3</color>
-    <color name="category_health">#FF9800</color>
-    <color name="category_shopping">#9C27B0</color>
-    <color name="category_travel">#00BCD4</color>
-    <color name="category_other">#795548</color>
+    <!-- Category Colors - Rainbow Gradient -->
+    <color name="category_default">#FF3030</color>    <!-- 红色 - Red -->
+    <color name="category_work">#FF8C00</color>       <!-- 橙色 - Dark Orange -->
+    <color name="category_personal">#FFD700</color>   <!-- 黄色 - Gold -->
+    <color name="category_study">#32CD32</color>      <!-- 绿色 - Lime Green -->
+    <color name="category_health">#00CED1</color>     <!-- 青色 - Dark Turquoise -->
+    <color name="category_shopping">#4169E1</color>   <!-- 蓝色 - Royal Blue -->
+    <color name="category_travel">#8A2BE2</color>     <!-- 紫色 - Blue Violet -->
 </resources>

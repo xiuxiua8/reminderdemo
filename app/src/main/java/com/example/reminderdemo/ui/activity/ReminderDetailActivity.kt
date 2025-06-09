@@ -67,11 +67,21 @@ class ReminderDetailActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_detail_toolbar, menu)
+        
+        // Hide info button for new reminders (no metadata to show)
+        if (mode == MODE_ADD) {
+            menu?.findItem(R.id.action_info)?.isVisible = false
+        }
+        
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.action_info -> {
+                toggleBottomSheet()
+                true
+            }
             R.id.action_save -> {
                 saveReminder()
                 true
@@ -116,23 +126,35 @@ class ReminderDetailActivity : AppCompatActivity() {
             val chip = Chip(this)
             chip.text = category.displayName
             chip.isCheckable = true
-            // Use predefined color for now
-            val color = when(category) {
-                ReminderCategory.DEFAULT -> R.color.primary_color
-                ReminderCategory.WORK -> R.color.category_work
-                ReminderCategory.PERSONAL -> R.color.category_personal
-                ReminderCategory.STUDY -> R.color.category_study
-                ReminderCategory.HEALTH -> R.color.category_health
-                ReminderCategory.SHOPPING -> R.color.category_shopping
-                ReminderCategory.TRAVEL -> R.color.category_travel
-                ReminderCategory.OTHER -> R.color.category_other
-            }
-            chip.chipBackgroundColor = ContextCompat.getColorStateList(this, color)
-            chip.setTextColor(ContextCompat.getColor(this, R.color.white))
+            
+            chip.textSize = 15f  
+            chip.chipCornerRadius = 16f  
+            chip.chipStartPadding = 10f  
+            chip.chipEndPadding = 10f  
+            chip.textStartPadding = 8f  
+            chip.textEndPadding = 8f  
+            chip.chipMinHeight = 44f  
+            
+            chip.chipStrokeColor = ContextCompat.getColorStateList(this, category.colorRes)
+            chip.setTextColor(ContextCompat.getColor(this, R.color.white))             
+
+            // 设置选中状态的背景色
+            val states = arrayOf(
+                intArrayOf(-android.R.attr.state_checked),
+                intArrayOf(android.R.attr.state_checked)
+            )
+            val colors = intArrayOf(
+                ContextCompat.getColor(this, category.colorRes),
+                ContextCompat.getColor(this, android.R.color.transparent)
+            )
+            chip.chipBackgroundColor = android.content.res.ColorStateList(states, colors)
             
             chip.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
                     selectedCategory = category
+                    chip.setTextColor(ContextCompat.getColor(this, category.colorRes))
+                } else {
+                    chip.setTextColor(ContextCompat.getColor(this, R.color.white))
                 }
             }
             
@@ -152,8 +174,17 @@ class ReminderDetailActivity : AppCompatActivity() {
             val chip = Chip(this)
             chip.text = priority.displayName
             chip.isCheckable = true
-            chip.chipStrokeWidth = 2f
-            // Use predefined color for now
+            
+            chip.textSize = 16f 
+            chip.chipCornerRadius = 20f  
+            chip.chipStartPadding = 14f 
+            chip.chipEndPadding = 14f  
+            chip.textStartPadding = 10f
+            chip.textEndPadding = 10f 
+            chip.chipMinHeight = 48f 
+            chip.chipStrokeWidth = 2.5f  
+            
+            // 使用预定义的颜色
             val color = when(priority) {
                 Priority.NORMAL -> R.color.priority_normal
                 Priority.IMPORTANT -> R.color.priority_important
@@ -162,9 +193,25 @@ class ReminderDetailActivity : AppCompatActivity() {
             chip.chipStrokeColor = ContextCompat.getColorStateList(this, color)
             chip.setTextColor(ContextCompat.getColor(this, color))
             
+            // 设置选中状态的背景色
+            val states = arrayOf(
+                intArrayOf(android.R.attr.state_checked),
+                intArrayOf(-android.R.attr.state_checked)
+            )
+            val colors = intArrayOf(
+                ContextCompat.getColor(this, color),
+                ContextCompat.getColor(this, android.R.color.transparent)
+            )
+            chip.chipBackgroundColor = android.content.res.ColorStateList(states, colors)
+            
             chip.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
                     selectedPriority = priority
+                    // 选中时文字变白色
+                    chip.setTextColor(ContextCompat.getColor(this, R.color.white))
+                } else {
+                    // 未选中时文字使用原色
+                    chip.setTextColor(ContextCompat.getColor(this, color))
                 }
             }
             
@@ -181,13 +228,13 @@ class ReminderDetailActivity : AppCompatActivity() {
         bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheetMetadata)
         bottomSheetBehavior.isHideable = true
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-        
-        binding.fabInfo.setOnClickListener {
-            if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN) {
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-            } else {
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-            }
+    }
+    
+    private fun toggleBottomSheet() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        } else {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         }
     }
 
@@ -208,10 +255,7 @@ class ReminderDetailActivity : AppCompatActivity() {
             binding.chipGroupPriority.getChildAt(i).isEnabled = isEditable
         }
         
-        // Hide info FAB for new reminders
-        if (mode == MODE_ADD) {
-            binding.fabInfo.visibility = View.GONE
-        }
+        // Info button is now in toolbar, no FAB to manage
         
         // Set up character counter
         setupCharacterCounter()
@@ -274,7 +318,7 @@ class ReminderDetailActivity : AppCompatActivity() {
     }
 
     private fun setupForNewReminder() {
-        binding.fabInfo.visibility = View.GONE
+        // Info button is handled in toolbar for all modes
     }
 
     private fun populateFields(reminder: Reminder) {
@@ -304,9 +348,6 @@ class ReminderDetailActivity : AppCompatActivity() {
         binding.tvCreatedAt.text = DateUtils.formatFullDate(reminder.createdAt)
         binding.tvUpdatedAt.text = DateUtils.formatFullDate(reminder.updatedAt)
         binding.tvCharCount.text = "${reminder.content.length} 字符"
-        
-        // Show info FAB
-        binding.fabInfo.visibility = View.VISIBLE
     }
 
     private fun saveReminder() {
