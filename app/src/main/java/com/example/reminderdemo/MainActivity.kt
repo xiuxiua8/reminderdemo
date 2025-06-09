@@ -6,9 +6,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.PopupMenu
-import android.widget.Toast
+
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
+
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +21,9 @@ import com.example.reminderdemo.ui.viewmodel.ReminderViewModel
 import com.example.reminderdemo.model.Reminder
 import com.example.reminderdemo.data.DatabaseInitializer
 import com.example.reminderdemo.data.ReminderDatabase
+import com.example.reminderdemo.utils.AnimationUtils
+import com.example.reminderdemo.utils.ToastUtils
+import com.example.reminderdemo.utils.DialogUtils
 
 class MainActivity : AppCompatActivity() {
 
@@ -119,14 +122,14 @@ class MainActivity : AppCompatActivity() {
         
         reminderViewModel.errorMessage.observe(this) { error ->
             error?.let {
-                Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+                ToastUtils.showError(this, it)
                 reminderViewModel.clearErrorMessage()
             }
         }
         
         reminderViewModel.operationSuccess.observe(this) { message ->
             message?.let {
-                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                ToastUtils.showSuccess(this, it)
                 reminderViewModel.clearSuccessMessage()
             }
         }
@@ -163,25 +166,21 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showDeleteConfirmDialog(reminder: Reminder) {
-        AlertDialog.Builder(this)
-            .setTitle("删除备忘录")
-            .setMessage("确定要删除\"${reminder.title}\"吗？")
-            .setPositiveButton("删除") { _, _ ->
-                reminderViewModel.deleteReminder(reminder)
-            }
-            .setNegativeButton("取消", null)
-            .show()
+        DialogUtils.showDeleteDialog(
+            context = this,
+            itemName = reminder.title
+        ) {
+            reminderViewModel.deleteReminder(reminder)
+        }
     }
     
     private fun showLogoutDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("退出登录")
-            .setMessage("确定要退出登录吗？")
-            .setPositiveButton("确定") { _, _ ->
-                logout()
-            }
-            .setNegativeButton("取消", null)
-            .show()
+        DialogUtils.showExitDialog(
+            context = this,
+            message = "确定要退出登录吗？"
+        ) {
+            logout()
+        }
     }
     
     private fun logout() {
@@ -193,6 +192,8 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
+        // 应用淡入淡出动画
+        AnimationUtils.applyFadeAnimation(this)
         finish()
     }
     
@@ -201,6 +202,8 @@ class MainActivity : AppCompatActivity() {
             putExtra(ReminderDetailActivity.EXTRA_MODE, ReminderDetailActivity.MODE_ADD)
         }
         startActivity(intent)
+        // 应用向前导航动画
+        AnimationUtils.applyForwardAnimation(this)
     }
     
     private fun navigateToEditReminder(reminderId: Long) {
@@ -209,6 +212,8 @@ class MainActivity : AppCompatActivity() {
             putExtra(ReminderDetailActivity.EXTRA_REMINDER_ID, reminderId)
         }
         startActivity(intent)
+        // 应用向前导航动画
+        AnimationUtils.applyForwardAnimation(this)
     }
     
     private fun navigateToViewReminder(reminderId: Long) {
@@ -217,5 +222,7 @@ class MainActivity : AppCompatActivity() {
             putExtra(ReminderDetailActivity.EXTRA_REMINDER_ID, reminderId)
         }
         startActivity(intent)
+        // 应用向前导航动画
+        AnimationUtils.applyForwardAnimation(this)
     }
 }

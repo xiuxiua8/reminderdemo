@@ -3,11 +3,13 @@ package com.example.reminderdemo.ui.activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
+
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.reminderdemo.databinding.ActivityLoginBinding
 import com.example.reminderdemo.ui.viewmodel.LoginViewModel
+import com.example.reminderdemo.utils.AnimationUtils
+import com.example.reminderdemo.utils.ToastUtils
 
 class LoginActivity : AppCompatActivity() {
     
@@ -52,11 +54,11 @@ class LoginActivity : AppCompatActivity() {
         loginViewModel.loginResult.observe(this) { result ->
             when (result) {
                 is LoginViewModel.LoginResult.Success -> {
-                    Toast.makeText(this, "欢迎回来，${result.username}!", Toast.LENGTH_SHORT).show()
+                    ToastUtils.showSuccess(this, "欢迎回来，${result.username}!")
                     navigateToMain()
                 }
                 is LoginViewModel.LoginResult.Error -> {
-                    Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
+                    ToastUtils.showError(this, result.message)
                 }
                 is LoginViewModel.LoginResult.LoggedOut -> {
                     // Handle logout if needed
@@ -95,6 +97,8 @@ class LoginActivity : AppCompatActivity() {
     private fun navigateToMain() {
         val intent = Intent(this, com.example.reminderdemo.MainActivity::class.java)
         startActivity(intent)
+        // 应用淡入淡出动画效果
+        AnimationUtils.applyFadeAnimation(this)
         finish()
     }
     

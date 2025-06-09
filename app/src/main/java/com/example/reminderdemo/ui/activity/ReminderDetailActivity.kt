@@ -7,7 +7,7 @@ import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
+
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -20,6 +20,9 @@ import com.example.reminderdemo.model.ReminderCategory
 import com.example.reminderdemo.ui.viewmodel.ReminderViewModel
 import com.example.reminderdemo.utils.DateUtils
 import com.example.reminderdemo.utils.ValidationUtils
+import com.example.reminderdemo.utils.AnimationUtils
+import com.example.reminderdemo.utils.ToastUtils
+import com.example.reminderdemo.utils.DialogUtils
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
@@ -279,15 +282,17 @@ class ReminderDetailActivity : AppCompatActivity() {
 
         reminderViewModel.errorMessage.observe(this) { error ->
             error?.let {
-                Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+                ToastUtils.showError(this, it)
                 reminderViewModel.clearErrorMessage()
             }
         }
 
         reminderViewModel.operationSuccess.observe(this) { message ->
             message?.let {
-                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                ToastUtils.showSuccess(this, it)
                 reminderViewModel.clearSuccessMessage()
+                // 应用返回动画
+                AnimationUtils.applyBackwardAnimation(this)
                 finish()
             }
         }
@@ -295,7 +300,7 @@ class ReminderDetailActivity : AppCompatActivity() {
 
     private fun loadReminderData() {
         if (reminderId == -1L) {
-            Toast.makeText(this, "无效的备忘录ID", Toast.LENGTH_SHORT).show()
+            ToastUtils.showError(this, "无效的备忘录ID")
             finish()
             return
         }
@@ -307,11 +312,11 @@ class ReminderDetailActivity : AppCompatActivity() {
                     currentReminder = reminder
                     populateFields(reminder)
                 } else {
-                    Toast.makeText(this@ReminderDetailActivity, "备忘录不存在", Toast.LENGTH_SHORT).show()
+                    ToastUtils.showError(this@ReminderDetailActivity, "备忘录不存在")
                     finish()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@ReminderDetailActivity, "加载失败: ${e.message}", Toast.LENGTH_LONG).show()
+                ToastUtils.showError(this@ReminderDetailActivity, "加载失败: ${e.message}")
                 finish()
             }
         }
@@ -408,15 +413,17 @@ class ReminderDetailActivity : AppCompatActivity() {
         
         // Check if there are unsaved changes
         if (hasUnsavedChanges()) {
-            androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("未保存的更改")
-                .setMessage("您有未保存的更改，确定要离开吗？")
-                .setPositiveButton("离开") { _, _ ->
+            DialogUtils.showUnsavedChangesDialog(
+                context = this,
+                onLeave = {
+                    // 应用返回动画
+                    AnimationUtils.applyBackwardAnimation(this)
                     super.onBackPressed()
                 }
-                .setNegativeButton("继续编辑", null)
-                .show()
+            )
         } else {
+            // 应用返回动画
+            AnimationUtils.applyBackwardAnimation(this)
             super.onBackPressed()
         }
     }
