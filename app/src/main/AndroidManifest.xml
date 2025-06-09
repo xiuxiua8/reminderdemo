@@ -27,6 +27,12 @@
             android:name=".MainActivity"
             android:exported="false"
             android:theme="@style/Theme.Reminderdemo" />
+            
+        <activity
+            android:name=".ui.activity.ReminderDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Reminderdemo"
+            android:parentActivityName=".MainActivity" />
     </application>
 
 </manifest>

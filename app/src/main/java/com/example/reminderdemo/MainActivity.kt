@@ -14,6 +14,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.reminderdemo.databinding.ActivityMainBinding
 import com.example.reminderdemo.ui.activity.LoginActivity
+import com.example.reminderdemo.ui.activity.ReminderDetailActivity
 import com.example.reminderdemo.ui.adapter.ReminderAdapter
 import com.example.reminderdemo.ui.viewmodel.LoginViewModel
 import com.example.reminderdemo.ui.viewmodel.ReminderViewModel
@@ -70,8 +71,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupUI() {
         binding.fab.setOnClickListener {
-            // TODO: Navigate to add reminder activity
-            Toast.makeText(this, "添加新备忘录功能即将推出", Toast.LENGTH_SHORT).show()
+            navigateToAddReminder()
         }
         
         // Search functionality
@@ -94,8 +94,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         reminderAdapter = ReminderAdapter(
             onItemClick = { reminder ->
-                // TODO: Navigate to edit reminder activity
-                Toast.makeText(this, "编辑: ${reminder.title}", Toast.LENGTH_SHORT).show()
+                navigateToEditReminder(reminder.id)
             },
             onMoreClick = { reminder, view ->
                 showMoreOptionsMenu(reminder, view)
@@ -135,7 +134,7 @@ class MainActivity : AppCompatActivity() {
     
     private fun initializeDatabase() {
         val database = ReminderDatabase.getDatabase(this)
-        DatabaseInitializer.initializeWithSampleData(database)
+        //DatabaseInitializer.initializeWithSampleData(database)
     }
     
     private fun updateEmptyState(isEmpty: Boolean) {
@@ -149,8 +148,7 @@ class MainActivity : AppCompatActivity() {
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     R.id.action_edit -> {
-                        // TODO: Navigate to edit reminder
-                        Toast.makeText(this@MainActivity, "编辑: ${reminder.title}", Toast.LENGTH_SHORT).show()
+                        navigateToEditReminder(reminder.id)
                         true
                     }
                     R.id.action_delete -> {
@@ -196,5 +194,28 @@ class MainActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+    
+    private fun navigateToAddReminder() {
+        val intent = Intent(this, ReminderDetailActivity::class.java).apply {
+            putExtra(ReminderDetailActivity.EXTRA_MODE, ReminderDetailActivity.MODE_ADD)
+        }
+        startActivity(intent)
+    }
+    
+    private fun navigateToEditReminder(reminderId: Long) {
+        val intent = Intent(this, ReminderDetailActivity::class.java).apply {
+            putExtra(ReminderDetailActivity.EXTRA_MODE, ReminderDetailActivity.MODE_EDIT)
+            putExtra(ReminderDetailActivity.EXTRA_REMINDER_ID, reminderId)
+        }
+        startActivity(intent)
+    }
+    
+    private fun navigateToViewReminder(reminderId: Long) {
+        val intent = Intent(this, ReminderDetailActivity::class.java).apply {
+            putExtra(ReminderDetailActivity.EXTRA_MODE, ReminderDetailActivity.MODE_VIEW)
+            putExtra(ReminderDetailActivity.EXTRA_REMINDER_ID, reminderId)
+        }
+        startActivity(intent)
     }
 }
