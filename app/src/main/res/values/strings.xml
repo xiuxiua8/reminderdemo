@@ -10,7 +10,7 @@
     <string name="remember_login">记住登录状态</string>
     <string name="login">登录</string>
     <string name="logout">退出登录</string>
-    <string name="demo_users_info">演示账户：\n• admin / 123456\n• user / password\n• test / test123</string>
+    <string name="demo_users_info">演示账户：\n• user / password\n• zilong / zilong</string>
     
     <!-- Common -->
     <string name="loading">加载中...</string>

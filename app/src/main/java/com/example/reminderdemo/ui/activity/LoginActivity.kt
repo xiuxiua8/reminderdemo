@@ -10,6 +10,8 @@ import com.example.reminderdemo.databinding.ActivityLoginBinding
 import com.example.reminderdemo.ui.viewmodel.LoginViewModel
 import com.example.reminderdemo.utils.AnimationUtils
 import com.example.reminderdemo.utils.ToastUtils
+import com.example.reminderdemo.utils.UIUtils
+import com.example.reminderdemo.utils.HapticUtils
 
 class LoginActivity : AppCompatActivity() {
     
@@ -33,13 +35,18 @@ class LoginActivity : AppCompatActivity() {
     }
     
     private fun setupUI() {
-        binding.btnLogin.setOnClickListener {
+        // 为登录按钮添加点击动画和触觉反馈
+        val originalClickListener = View.OnClickListener {
             val username = binding.etUsername.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
             val rememberLogin = binding.cbRememberLogin.isChecked
             
+            HapticUtils.mediumTap(binding.btnLogin)
             loginViewModel.login(username, password, rememberLogin)
         }
+        
+        binding.btnLogin.tag = originalClickListener
+        UIUtils.setupClickAnimation(binding.btnLogin)
     }
     
     private fun observeViewModel() {
@@ -55,10 +62,14 @@ class LoginActivity : AppCompatActivity() {
             when (result) {
                 is LoginViewModel.LoginResult.Success -> {
                     ToastUtils.showSuccess(this, "欢迎回来，${result.username}!")
+                    HapticUtils.success(this)
+                    UIUtils.showSuccessState(binding.btnLogin, this)
                     navigateToMain()
                 }
                 is LoginViewModel.LoginResult.Error -> {
                     ToastUtils.showError(this, result.message)
+                    HapticUtils.error(this)
+                    UIUtils.showErrorState(binding.btnLogin, this)
                 }
                 is LoginViewModel.LoginResult.LoggedOut -> {
                     // Handle logout if needed
@@ -78,17 +89,17 @@ class LoginActivity : AppCompatActivity() {
         }
     }
     
-    private fun showLoading() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.btnLogin.isEnabled = false
+        private fun showLoading() {
+        UIUtils.fadeIn(binding.progressBar)
+        UIUtils.setLoadingState(binding.btnLogin, true)
         binding.etUsername.isEnabled = false
         binding.etPassword.isEnabled = false
         binding.cbRememberLogin.isEnabled = false
     }
-    
+
     private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE
-        binding.btnLogin.isEnabled = true
+        UIUtils.fadeOut(binding.progressBar)
+        UIUtils.setLoadingState(binding.btnLogin, false)
         binding.etUsername.isEnabled = true
         binding.etPassword.isEnabled = true
         binding.cbRememberLogin.isEnabled = true

@@ -24,6 +24,8 @@ import com.example.reminderdemo.data.ReminderDatabase
 import com.example.reminderdemo.utils.AnimationUtils
 import com.example.reminderdemo.utils.ToastUtils
 import com.example.reminderdemo.utils.DialogUtils
+import com.example.reminderdemo.utils.UIUtils
+import com.example.reminderdemo.utils.HapticUtils
 
 class MainActivity : AppCompatActivity() {
 
@@ -73,7 +75,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        binding.fab.setOnClickListener {
+        // 设置FAB动画和触觉反馈
+        UIUtils.setupFabAnimation(binding.fab) {
             navigateToAddReminder()
         }
         
@@ -117,12 +120,19 @@ class MainActivity : AppCompatActivity() {
         }
         
         reminderViewModel.isLoading.observe(this) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            if (isLoading) {
+                UIUtils.fadeIn(binding.progressBar)
+                UIUtils.setLoadingState(binding.fab, true)
+            } else {
+                UIUtils.fadeOut(binding.progressBar)
+                UIUtils.setLoadingState(binding.fab, false)
+            }
         }
         
         reminderViewModel.errorMessage.observe(this) { error ->
             error?.let {
                 ToastUtils.showError(this, it)
+                HapticUtils.error(this)
                 reminderViewModel.clearErrorMessage()
             }
         }
@@ -130,6 +140,7 @@ class MainActivity : AppCompatActivity() {
         reminderViewModel.operationSuccess.observe(this) { message ->
             message?.let {
                 ToastUtils.showSuccess(this, it)
+                HapticUtils.success(this)
                 reminderViewModel.clearSuccessMessage()
             }
         }
@@ -166,10 +177,12 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showDeleteConfirmDialog(reminder: Reminder) {
+        HapticUtils.warning(this)
         DialogUtils.showDeleteDialog(
             context = this,
             itemName = reminder.title
         ) {
+            HapticUtils.delete(this)
             reminderViewModel.deleteReminder(reminder)
         }
     }

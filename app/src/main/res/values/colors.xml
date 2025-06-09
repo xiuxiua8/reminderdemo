@@ -37,4 +37,9 @@
     <color name="category_health">#00CED1</color>     <!-- 青色 - Dark Turquoise -->
     <color name="category_shopping">#4169E1</color>   <!-- 蓝色 - Royal Blue -->
     <color name="category_travel">#8A2BE2</color>     <!-- 紫色 - Blue Violet -->
+    
+    <!-- UI feedback colors -->
+    <color name="success_light">#E8F5E8</color>
+    <color name="error_light">#FFEBEE</color>
+    <color name="warning_light">#FFF3E0</color>
 </resources>
