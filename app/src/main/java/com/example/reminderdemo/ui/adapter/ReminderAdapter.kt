@@ -11,6 +11,7 @@ import com.example.reminderdemo.model.Priority
 import com.example.reminderdemo.model.Reminder
 import com.example.reminderdemo.model.ReminderCategory
 import com.example.reminderdemo.utils.DateUtils
+import com.example.reminderdemo.utils.AnimationUtils
 
 class ReminderAdapter(
     private val onItemClick: (Reminder) -> Unit,
@@ -28,6 +29,8 @@ class ReminderAdapter(
 
     override fun onBindViewHolder(holder: ReminderViewHolder, position: Int) {
         holder.bind(getItem(position))
+        // 添加列表项进入动画
+        AnimationUtils.animateListItem(holder.itemView, position)
     }
 
     inner class ReminderViewHolder(
@@ -79,7 +82,10 @@ class ReminderAdapter(
                 }
                 
                 // Click listeners
-                root.setOnClickListener { onItemClick(reminder) }
+                root.setOnClickListener { 
+                    AnimationUtils.animateCardPress(it)
+                    onItemClick(reminder) 
+                }
                 ivMore.setOnClickListener { onMoreClick(reminder, it) }
             }
         }

@@ -122,8 +122,10 @@ class MainActivity : AppCompatActivity() {
         reminderViewModel.isLoading.observe(this) { isLoading ->
             if (isLoading) {
                 UIUtils.fadeIn(binding.progressBar)
+                AnimationUtils.startPulseAnimation(binding.progressBar)
                 UIUtils.setLoadingState(binding.fab, true)
             } else {
+                AnimationUtils.stopPulseAnimation(binding.progressBar)
                 UIUtils.fadeOut(binding.progressBar)
                 UIUtils.setLoadingState(binding.fab, false)
             }
@@ -152,8 +154,15 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun updateEmptyState(isEmpty: Boolean) {
-        binding.layoutEmptyState.visibility = if (isEmpty) View.VISIBLE else View.GONE
-        binding.rvReminders.visibility = if (isEmpty) View.GONE else View.VISIBLE
+        if (isEmpty) {
+            binding.layoutEmptyState.visibility = View.VISIBLE
+            binding.rvReminders.visibility = View.GONE
+            // 添加弹性进入动画
+            AnimationUtils.animateBounceIn(binding.layoutEmptyState)
+        } else {
+            binding.layoutEmptyState.visibility = View.GONE
+            binding.rvReminders.visibility = View.VISIBLE
+        }
     }
     
     private fun showMoreOptionsMenu(reminder: Reminder, anchorView: View) {

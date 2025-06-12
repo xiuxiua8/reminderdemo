@@ -57,7 +57,9 @@ class RegisterActivity : AppCompatActivity() {
         // 设置点击事件
         binding.btnRegister.setOnClickListener {
             HapticUtils.lightTap(it)
-            performRegister()
+            AnimationUtils.animateButtonPress(it) {
+                performRegister()
+            }
         }
         
         binding.tvLoginLink.setOnClickListener {
@@ -193,6 +195,7 @@ class RegisterActivity : AppCompatActivity() {
         val result = UsernameValidator.validateFormat(username)
         if (!result.isValid) {
             binding.tilUsername.error = result.errorMessage
+            AnimationUtils.animateShake(binding.tilUsername)
             return false
         }
         
@@ -229,10 +232,12 @@ class RegisterActivity : AppCompatActivity() {
         return when {
             email.isEmpty() -> {
                 binding.tilEmail.error = "请输入邮箱地址"
+                AnimationUtils.animateShake(binding.tilEmail)
                 false
             }
             !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                 binding.tilEmail.error = "请输入有效的邮箱地址"
+                AnimationUtils.animateShake(binding.tilEmail)
                 false
             }
             else -> {
