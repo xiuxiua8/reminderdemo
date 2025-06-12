@@ -62,6 +62,12 @@ class LoginActivity : AppCompatActivity() {
         
         // 为登录按钮添加点击动画
         UIUtils.setupClickAnimation(binding.btnLogin)
+        
+        // 设置注册链接点击事件
+        binding.tvRegisterLink.setOnClickListener {
+            HapticUtils.lightTap(it)
+            navigateToRegister()
+        }
     }
 
     private fun observeViewModel() {
@@ -99,6 +105,12 @@ class LoginActivity : AppCompatActivity() {
         // 应用淡入淡出动画效果
         AnimationUtils.applyFadeAnimation(this)
         finish()
+    }
+    
+    private fun navigateToRegister() {
+        val intent = Intent(this, RegisterActivity::class.java)
+        startActivity(intent)
+        AnimationUtils.applyFadeAnimation(this)
     }
     
     override fun onDestroy() {

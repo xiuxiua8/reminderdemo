@@ -69,6 +69,7 @@ abstract class ReminderDatabase : RoomDatabase() {
                     ReminderDatabase::class.java,
                     "reminder_database_v2"
                 )
+                .addMigrations(MIGRATION_1_2)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

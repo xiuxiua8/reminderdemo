@@ -21,6 +21,18 @@ class PreferencesManager(context: Context) {
         private const val KEY_SORT_ORDER = "sort_order"
         private const val KEY_DEFAULT_CATEGORY = "default_category"
         private const val KEY_THEME_MODE = "theme_mode"
+        
+        // 单例模式
+        @Volatile
+        private var INSTANCE: PreferencesManager? = null
+        
+        fun getInstance(context: Context): PreferencesManager {
+            return INSTANCE ?: synchronized(this) {
+                val instance = PreferencesManager(context.applicationContext)
+                INSTANCE = instance
+                instance
+            }
+        }
     }
     
     // 登录相关
@@ -98,5 +110,23 @@ class PreferencesManager(context: Context) {
     
     fun clearAll() {
         sharedPreferences.edit().clear().apply()
+    }
+    
+    /**
+     * 便捷方法：保存用户信息（用于注册/登录）
+     */
+    fun saveUser(username: String, displayName: String) {
+        this.username = username
+        this.currentUserDisplayName = displayName
+    }
+    
+    /**
+     * 便捷方法：设置登录状态
+     */
+    fun updateLoginStatus(loggedIn: Boolean) {
+        this.isLoggedIn = loggedIn
+        if (loggedIn) {
+            this.lastLoginTime = System.currentTimeMillis()
+        }
     }
 } 

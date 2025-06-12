@@ -11,6 +11,13 @@
     <string name="login">登录</string>
     <string name="logout">退出登录</string>
     <string name="demo_users_info">演示账户：\n• user / password\n• zilong / zilong</string>
+    <string name="register">注册</string>
+    <string name="register_link">还没有账户？点击注册</string>
+    <string name="email">邮箱</string>
+    <string name="confirm_password">确认密码</string>
+    <string name="register_title">创建新账户</string>
+    <string name="register_subtitle">加入我们，开始管理您的备忘录</string>
+    <string name="already_have_account">已有账户？点击登录</string>
     
     <!-- Common -->
     <string name="loading">加载中...</string>
