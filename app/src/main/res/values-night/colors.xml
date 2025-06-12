@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Override specific colors for dark theme -->
+    
+    <!-- Background Colors for Dark Theme -->
+    <color name="background_color">#1C1B1F</color>
+    <color name="surface_color">#1C1B1F</color>
+    <color name="surface">#1C1B1F</color>
+    <color name="outline_variant">#49454F</color>
+    
+    <!-- Text Colors for Dark Theme -->
+    <color name="text_primary">#E6E1E5</color>
+    <color name="text_secondary">#CAC4D0</color>
+    <color name="text_high_emphasis">#E6E1E5</color>       
+    <color name="text_medium_emphasis">#CAC4D0</color>     
+    <color name="text_disabled">#938F99</color>
+    
+    <!-- Status Colors for Dark Theme -->
+    <color name="success_color">#81C784</color>    <!-- 更亮的绿色适合暗背景 -->
+    <color name="error_color">#EF5350</color>      <!-- 更亮的红色适合暗背景 -->
+    <color name="warning_color">#FFB74D</color>    <!-- 更亮的橙色适合暗背景 -->
+    
+    <!-- Surface elevation colors for dark theme -->
+    <color name="surface_1">#242027</color>     <!-- 1dp elevation -->
+    <color name="surface_2">#28252C</color>     <!-- 3dp elevation -->
+    <color name="surface_3">#2D2A32</color>     <!-- 6dp elevation -->
+    <color name="surface_4">#322F37</color>     <!-- 8dp elevation -->
+    <color name="surface_5">#37343C</color>     <!-- 12dp elevation -->
+    
+    <!-- Enhanced category colors for dark theme -->
+    <color name="category_work_light">#3E2723</color>      <!-- 深色工作类别背景 -->
+    <color name="category_personal_light">#1B5E20</color>  <!-- 深色个人类别背景 -->
+    <color name="category_study_light">#2E7D32</color>     <!-- 深色学习类别背景 -->
+    <color name="category_health_light">#00695C</color>    <!-- 深色健康类别背景 -->
+    <color name="category_shopping_light">#1565C0</color>  <!-- 深色购物类别背景 -->
+    <color name="category_travel_light">#6A1B9A</color>    <!-- 深色旅行类别背景 -->
+    
+    <!-- UI feedback colors for dark theme -->
+    <color name="success_light">#2E7D32</color>
+    <color name="error_light">#D32F2F</color>
+    <color name="warning_light">#F57C00</color>
+    
+    <!-- Category Colors adapted for dark theme - brighter variants -->
+    <color name="category_default">#FF5252</color>    <!-- 红色 - 更亮 -->
+    <color name="category_work">#FFB74D</color>       <!-- 橙色 - 更亮 -->
+    <color name="category_personal">#FFEB3B</color>   <!-- 黄色 - 更亮 -->
+    <color name="category_study">#66BB6A</color>      <!-- 绿色 - 更亮 -->
+    <color name="category_health">#4DD0E1</color>     <!-- 青色 - 更亮 -->
+    <color name="category_shopping">#64B5F6</color>   <!-- 蓝色 - 更亮 -->
+    <color name="category_travel">#BA68C8</color>     <!-- 紫色 - 更亮 -->
+</resources> 
